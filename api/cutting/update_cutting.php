@@ -3,6 +3,10 @@
 //  KROY yozuvini yangilash (rasm ixtiyoriy)
 // =====================================================
 
+error_reporting(E_ALL);
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
 header('Content-Type: application/json; charset=utf-8');
 date_default_timezone_set('Asia/Tashkent');
 
@@ -27,16 +31,16 @@ try {
         exit;
     }
 
-    $kroy_number  = trim($_POST['kroy_number']  ?? '');
-    $layer_length = $_POST['layer_length'] !== '' ? (float)$_POST['layer_length'] : null;
-    $layer_count  = $_POST['layer_count']  !== '' ? (int)$_POST['layer_count']    : null;
-    $composition  = trim($_POST['composition']  ?? '');
-    $percentage   = trim($_POST['percentage']   ?? '');
-    $gramm        = $_POST['gramm']  !== '' ? (int)$_POST['gramm'] : null;
-    $width        = $_POST['width']  !== '' ? (int)$_POST['width'] : null;
+    $kroy_number  = trim($_POST['kroy_number'] ?? '');
+    $layer_length = ($_POST['layer_length'] ?? '') !== '' ? (float)$_POST['layer_length'] : null;
+    $layer_count  = ($_POST['layer_count']  ?? '') !== '' ? (int)$_POST['layer_count']    : null;
+    $composition  = trim($_POST['composition'] ?? '');
+    $percentage   = trim($_POST['percentage']  ?? '');
+    $gramm        = ($_POST['gramm'] ?? '') !== '' ? (int)$_POST['gramm'] : null;
+    $width        = ($_POST['width'] ?? '') !== '' ? (int)$_POST['width'] : null;
     $model_name   = trim($_POST['model_name'] ?? '');
     $sizes        = trim($_POST['sizes'] ?? '');
-    $quantity     = $_POST['quantity'] !== '' ? (int)$_POST['quantity'] : null;
+    $quantity     = ($_POST['quantity'] ?? '') !== '' ? (int)$_POST['quantity'] : null;
     $cut_date     = trim($_POST['date'] ?? date('Y-m-d'));
 
     if ($kroy_number === '') {
