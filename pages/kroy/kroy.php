@@ -305,258 +305,286 @@
 
 
 <script>
-$(document).ready(function () {
+// =====================================================
+//  KROY sahifasi JS
+//  MUHIM: submit handlerlar DELEGATSIYA orqali document ga
+//  bog'lanadi va kutubxonalarga (DataTables/Chart.js) bog'liq EMAS.
+//  Shuning uchun kutubxona yuklanmasa ham forma yuboriladi.
+// =====================================================
+(function () {
 
-    // ============ RASM PREVIEW (qo'shish) ============
-    $("#imageUpload").on("click", function () { $("#imageInput").click(); });
-    $("#imageInput").on("change", function (e) {
+    // ---------- RASM PREVIEW (qo'shish) ----------
+    $(document).off('click.kroyAddImg', '#imageUpload').on('click.kroyAddImg', '#imageUpload', function () {
+        $('#imageInput').click();
+    });
+    $(document).off('change.kroyAddImg', '#imageInput').on('change.kroyAddImg', '#imageInput', function (e) {
         let file = e.target.files[0];
         if (file) {
             let reader = new FileReader();
             reader.onload = function (ev) {
-                $("#imagePreview").attr("src", ev.target.result).removeClass("d-none");
-                $("#uploadText").hide();
+                $('#imagePreview').attr('src', ev.target.result).removeClass('d-none');
+                $('#uploadText').hide();
             };
             reader.readAsDataURL(file);
         }
     });
 
-    // ============ RASM PREVIEW (tahrir) ============
-    $("#editImageUpload").on("click", function () { $("#editImageInput").click(); });
-    $("#editImageInput").on("change", function (e) {
+    // ---------- RASM PREVIEW (tahrir) ----------
+    $(document).off('click.kroyEditImg', '#editImageUpload').on('click.kroyEditImg', '#editImageUpload', function () {
+        $('#editImageInput').click();
+    });
+    $(document).off('change.kroyEditImg', '#editImageInput').on('change.kroyEditImg', '#editImageInput', function (e) {
         let file = e.target.files[0];
         if (file) {
             let reader = new FileReader();
             reader.onload = function (ev) {
-                $("#editImagePreview").attr("src", ev.target.result).removeClass("d-none");
-                $("#editUploadText").hide();
+                $('#editImagePreview').attr('src', ev.target.result).removeClass('d-none');
+                $('#editUploadText').hide();
             };
             reader.readAsDataURL(file);
         }
     });
 
-    // ============ DATATABLE ============
-    let cuttingTable = $('#cuttingTable').DataTable({
-        ajax: {
-            url: "api/cutting/fetch_cutting.php",
-            dataSrc: "data"
-        },
-        order: [[0, 'desc']],
-        columns: [
-            { data: 'id' },
-            { data: 'kroy_number' },
-            { data: 'model_name' },
-            { data: 'sizes' },
-            { data: 'quantity' },
-            { data: 'composition' },
-            {
-                data: null,
-                render: function (row) {
-                    let len = row.layer_length ?? '-';
-                    let cnt = row.layer_count ?? '-';
-                    return len + ' x ' + cnt;
-                }
-            },
-            { data: 'fabric_used' },
-            {
-                data: null,
-                render: function (row) {
-                    return (row.width ?? '-') + ' sm / ' + (row.gramm ?? '-') + ' g';
-                }
-            },
-            { data: 'cut_date' },
-            {
-                data: 'image',
-                orderable: false,
-                render: function (img) {
-                    if (img) {
-                        return '<img src="uploads/cutting/' + img + '" style="width:45px;height:45px;object-fit:cover;border-radius:6px;">';
-                    }
-                    return '<span class="text-muted small">yo\'q</span>';
-                }
-            },
-            {
-                data: 'id',
-                orderable: false,
-                render: function (id) {
-                    return `
-                        <button class="btn btn-sm btn-outline-primary btn-edit" data-id="${id}"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${id}"><i class="bi bi-trash"></i></button>
-                    `;
-                }
-            }
-        ],
-        language: {
-            emptyTable: "Ma'lumot yo'q",
-            search: "Qidirish:",
-            lengthMenu: "_MENU_ ta ko'rsatish",
-            info: "_TOTAL_ tadan _START_-_END_",
-            infoEmpty: "0 ta yozuv",
-            paginate: { first: "Birinchi", last: "Oxirgi", next: "Keyingi", previous: "Oldingi" }
-        }
-    });
-
-    // ============ STATISTIKA YUKLASH ============
-    let trendChart = null;
-    function loadStats() {
-        $.getJSON("api/cutting/cutting_stats.php", function (res) {
-            if (res.status !== "success") return;
-
-            $("#kpi_kroy_month").text(res.kpi.kroy_month);
-            $("#kpi_models_month").text(res.kpi.models_month);
-            $("#kpi_fabric_month").text(res.kpi.fabric_month);
-            $("#kpi_top_model").text(res.kpi.top_model);
-            $("#kpi_top_model_qty").text(res.kpi.top_model_qty > 0 ? res.kpi.top_model_qty + " dona" : "");
-
-            // Chart
-            let ctx = document.getElementById('cuttingTrendChart').getContext('2d');
-            if (trendChart) trendChart.destroy();
-            trendChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: res.trend.labels,
-                    datasets: [
-                        {
-                            label: 'Kroylar soni',
-                            data: res.trend.kroy,
-                            backgroundColor: 'rgba(13,110,253,0.6)',
-                            borderRadius: 6
-                        },
-                        {
-                            label: 'Modellar soni',
-                            data: res.trend.models,
-                            backgroundColor: 'rgba(25,135,84,0.6)',
-                            borderRadius: 6
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { position: 'top' } },
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
-        });
-    }
-    loadStats();
-
-    // ============ QO'SHISH ============
-    $("#add_product_form").on("submit", function (e) {
+    // ---------- QO'SHISH (delegatsiya) ----------
+    $(document).off('submit.kroyAdd', '#add_product_form').on('submit.kroyAdd', '#add_product_form', function (e) {
         e.preventDefault();
         let formData = new FormData(this);
 
         $.ajax({
-            url: "api/cutting/add_cutting_product.php",
-            type: "POST",
+            url: 'api/cutting/add_cutting_product.php',
+            type: 'POST',
             data: formData,
             contentType: false,
             processData: false,
-            dataType: "json",
+            dataType: 'json',
             success: function (data) {
-                if (data.status === "success") {
-                    $("#formAlert").removeClass("d-none alert-danger").addClass("alert-success").text(data.message);
-                    $("#add_product_form")[0].reset();
-                    $("#imagePreview").addClass("d-none");
-                    $("#uploadText").show();
-                    cuttingTable.ajax.reload(null, false);
+                if (data.status === 'success') {
+                    $('#formAlert').removeClass('d-none alert-danger').addClass('alert-success').text(data.message);
+                    $('#add_product_form')[0].reset();
+                    $('#imagePreview').addClass('d-none');
+                    $('#uploadText').show();
+                    reloadTable();
                     loadStats();
                     setTimeout(function () {
-                        bootstrap.Modal.getInstance(document.getElementById('add_product_kroy_modal')).hide();
-                        $("#formAlert").addClass("d-none");
+                        let m = bootstrap.Modal.getInstance(document.getElementById('add_product_kroy_modal'));
+                        if (m) m.hide();
+                        $('#formAlert').addClass('d-none');
                     }, 900);
                 } else {
-                    $("#formAlert").removeClass("d-none alert-success").addClass("alert-danger").text(data.message);
+                    $('#formAlert').removeClass('d-none alert-success').addClass('alert-danger').text(data.message);
                 }
             },
-            error: function () {
-                $("#formAlert").removeClass("d-none alert-success").addClass("alert-danger").text("Server bilan bog'lanishda xatolik");
+            error: function (xhr) {
+                // Server xato bersa (JSON emas), sababini ko'rsatamiz
+                $('#formAlert').removeClass('d-none alert-success').addClass('alert-danger')
+                    .html("Server xatosi (kod: " + xhr.status + ").<br><small>" +
+                          (xhr.responseText ? xhr.responseText.substring(0, 400) : 'Javob bo\'sh') + "</small>");
             }
         });
     });
 
-    // ============ TAHRIRLASH: ma'lumotni yuklash ============
-    $('#cuttingTable tbody').on('click', '.btn-edit', function () {
-        let id = $(this).data('id');
-        $.getJSON("api/cutting/get_cutting.php?id=" + id, function (res) {
-            if (res.status !== "success") { alert(res.message); return; }
-            let d = res.data;
-            $("#edit_id").val(d.id);
-            $("#edit_kroy_number").val(d.kroy_number);
-            $("#edit_layer_length").val(d.layer_length);
-            $("#edit_layer_count").val(d.layer_count);
-            $("#edit_composition").val(d.composition);
-            $("#edit_percentage").val(d.percentage);
-            $("#edit_gramm").val(d.gramm);
-            $("#edit_width").val(d.width);
-            $("#edit_model_name").val(d.model_name);
-            $("#edit_sizes").val(d.sizes);
-            $("#edit_quantity").val(d.quantity);
-            $("#edit_date").val(d.cut_date);
+    // ---------- TAHRIRLASH: yuborish ----------
+    $(document).off('submit.kroyEdit', '#edit_product_form').on('submit.kroyEdit', '#edit_product_form', function (e) {
+        e.preventDefault();
+        let formData = new FormData(this);
 
-            // Mavjud rasmni ko'rsatish
-            if (d.image) {
-                $("#editImagePreview").attr("src", "uploads/cutting/" + d.image).removeClass("d-none");
-                $("#editUploadText").hide();
-            } else {
-                $("#editImagePreview").addClass("d-none");
-                $("#editUploadText").show();
+        $.ajax({
+            url: 'api/cutting/update_cutting.php',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            success: function (data) {
+                if (data.status === 'success') {
+                    $('#editFormAlert').removeClass('d-none alert-danger').addClass('alert-success').text(data.message);
+                    reloadTable();
+                    loadStats();
+                    setTimeout(function () {
+                        let m = bootstrap.Modal.getInstance(document.getElementById('edit_product_kroy_modal'));
+                        if (m) m.hide();
+                        $('#editFormAlert').addClass('d-none');
+                    }, 900);
+                } else {
+                    $('#editFormAlert').removeClass('d-none alert-success').addClass('alert-danger').text(data.message);
+                }
+            },
+            error: function (xhr) {
+                $('#editFormAlert').removeClass('d-none alert-success').addClass('alert-danger')
+                    .html("Server xatosi (kod: " + xhr.status + ").<br><small>" +
+                          (xhr.responseText ? xhr.responseText.substring(0, 400) : '') + "</small>");
             }
-            $("#editImageInput").val("");
+        });
+    });
+
+    // ---------- TAHRIRLASH: ma'lumot yuklash ----------
+    $(document).off('click.kroyEditBtn', '#cuttingTable .btn-edit').on('click.kroyEditBtn', '#cuttingTable .btn-edit', function () {
+        let id = $(this).data('id');
+        $.getJSON('api/cutting/get_cutting.php?id=' + id, function (res) {
+            if (!res || res.status !== 'success') { alert(res ? res.message : 'Xatolik'); return; }
+            let d = res.data;
+            $('#edit_id').val(d.id);
+            $('#edit_kroy_number').val(d.kroy_number);
+            $('#edit_layer_length').val(d.layer_length);
+            $('#edit_layer_count').val(d.layer_count);
+            $('#edit_composition').val(d.composition);
+            $('#edit_percentage').val(d.percentage);
+            $('#edit_gramm').val(d.gramm);
+            $('#edit_width').val(d.width);
+            $('#edit_model_name').val(d.model_name);
+            $('#edit_sizes').val(d.sizes);
+            $('#edit_quantity').val(d.quantity);
+            $('#edit_date').val(d.cut_date);
+
+            if (d.image) {
+                $('#editImagePreview').attr('src', 'uploads/cutting/' + d.image).removeClass('d-none');
+                $('#editUploadText').hide();
+            } else {
+                $('#editImagePreview').addClass('d-none');
+                $('#editUploadText').show();
+            }
+            $('#editImageInput').val('');
             new bootstrap.Modal(document.getElementById('edit_product_kroy_modal')).show();
         });
     });
 
-    // ============ TAHRIRLASH: yuborish ============
-    $("#edit_product_form").on("submit", function (e) {
-        e.preventDefault();
-        let formData = new FormData(this);
-
-        $.ajax({
-            url: "api/cutting/update_cutting.php",
-            type: "POST",
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType: "json",
-            success: function (data) {
-                if (data.status === "success") {
-                    $("#editFormAlert").removeClass("d-none alert-danger").addClass("alert-success").text(data.message);
-                    cuttingTable.ajax.reload(null, false);
-                    loadStats();
-                    setTimeout(function () {
-                        bootstrap.Modal.getInstance(document.getElementById('edit_product_kroy_modal')).hide();
-                        $("#editFormAlert").addClass("d-none");
-                    }, 900);
-                } else {
-                    $("#editFormAlert").removeClass("d-none alert-success").addClass("alert-danger").text(data.message);
-                }
-            },
-            error: function () {
-                $("#editFormAlert").removeClass("d-none alert-success").addClass("alert-danger").text("Server bilan bog'lanishda xatolik");
-            }
-        });
-    });
-
-    // ============ O'CHIRISH ============
-    $('#cuttingTable tbody').on('click', '.btn-delete', function () {
+    // ---------- O'CHIRISH ----------
+    $(document).off('click.kroyDel', '#cuttingTable .btn-delete').on('click.kroyDel', '#cuttingTable .btn-delete', function () {
         let id = $(this).data('id');
         if (!confirm("Ushbu kroy yozuvini o'chirmoqchimisiz?")) return;
 
         $.ajax({
-            url: "api/cutting/delete_cutting.php",
-            type: "POST",
+            url: 'api/cutting/delete_cutting.php',
+            type: 'POST',
             data: { id: id },
-            dataType: "json",
+            dataType: 'json',
             success: function (data) {
-                if (data.status === "success") {
-                    cuttingTable.ajax.reload(null, false);
-                    loadStats();
-                } else {
-                    alert(data.message);
-                }
+                if (data.status === 'success') { reloadTable(); loadStats(); }
+                else { alert(data.message); }
             }
         });
     });
 
-});
+    // ============ JADVAL VA STATISTIKA ============
+    let cuttingTable = null;
+
+    window.reloadTable = function () {
+        if (cuttingTable) {
+            cuttingTable.ajax.reload(null, false);
+        }
+    };
+
+    window.loadStats = function () {
+        $.getJSON('api/cutting/cutting_stats.php', function (res) {
+            if (!res || res.status !== 'success') return;
+            $('#kpi_kroy_month').text(res.kpi.kroy_month);
+            $('#kpi_models_month').text(res.kpi.models_month);
+            $('#kpi_fabric_month').text(res.kpi.fabric_month);
+            $('#kpi_top_model').text(res.kpi.top_model);
+            $('#kpi_top_model_qty').text(res.kpi.top_model_qty > 0 ? res.kpi.top_model_qty + ' dona' : '');
+            if (typeof Chart !== 'undefined') drawChart(res.trend);
+        });
+    };
+
+    let trendChart = null;
+    function drawChart(trend) {
+        let el = document.getElementById('cuttingTrendChart');
+        if (!el) return;
+        let ctx = el.getContext('2d');
+        if (trendChart) trendChart.destroy();
+        trendChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: trend.labels,
+                datasets: [
+                    { label: 'Kroylar soni',  data: trend.kroy,   backgroundColor: 'rgba(13,110,253,0.6)', borderRadius: 6 },
+                    { label: 'Modellar soni', data: trend.models, backgroundColor: 'rgba(25,135,84,0.6)', borderRadius: 6 }
+                ]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+        });
+    }
+
+    function initTable() {
+        if (!$.fn || !$.fn.DataTable) return; // DataTables yuklanmagan bo'lsa jadvalni tashlab ketamiz
+        if ($.fn.DataTable.isDataTable('#cuttingTable')) {
+            $('#cuttingTable').DataTable().destroy();
+        }
+        cuttingTable = $('#cuttingTable').DataTable({
+            ajax: { url: 'api/cutting/fetch_cutting.php', dataSrc: 'data' },
+            order: [[0, 'desc']],
+            columns: [
+                { data: 'id' },
+                { data: 'kroy_number' },
+                { data: 'model_name' },
+                { data: 'sizes' },
+                { data: 'quantity' },
+                { data: 'composition' },
+                { data: null, render: function (row) { return (row.layer_length ?? '-') + ' x ' + (row.layer_count ?? '-'); } },
+                { data: 'fabric_used' },
+                { data: null, render: function (row) { return (row.width ?? '-') + ' sm / ' + (row.gramm ?? '-') + ' g'; } },
+                { data: 'cut_date' },
+                {
+                    data: 'image', orderable: false,
+                    render: function (img) {
+                        if (img) return '<img src="uploads/cutting/' + img + '" style="width:45px;height:45px;object-fit:cover;border-radius:6px;">';
+                        return '<span class="text-muted small">yo\'q</span>';
+                    }
+                },
+                {
+                    data: 'id', orderable: false,
+                    render: function (id) {
+                        return '<button class="btn btn-sm btn-outline-primary btn-edit" data-id="' + id + '"><i class="bi bi-pencil"></i></button> ' +
+                               '<button class="btn btn-sm btn-outline-danger btn-delete" data-id="' + id + '"><i class="bi bi-trash"></i></button>';
+                    }
+                }
+            ],
+            language: {
+                emptyTable: "Ma'lumot yo'q",
+                search: "Qidirish:",
+                lengthMenu: "_MENU_ ta ko'rsatish",
+                info: "_TOTAL_ tadan _START_-_END_",
+                infoEmpty: "0 ta yozuv",
+                zeroRecords: "Topilmadi",
+                paginate: { first: "Birinchi", last: "Oxirgi", next: "Keyingi", previous: "Oldingi" }
+            }
+        });
+    }
+
+    // ============ KUTUBXONALARNI YUKLASH (DataTables + Chart.js) ============
+    function loadCss(href) {
+        if (!document.querySelector('link[data-kroy="' + href + '"]')) {
+            let l = document.createElement('link');
+            l.rel = 'stylesheet'; l.href = href; l.setAttribute('data-kroy', href);
+            document.head.appendChild(l);
+        }
+    }
+    function loadScript(src) {
+        return new Promise(function (resolve) {
+            let ex = document.querySelector('script[data-kroy="' + src + '"]');
+            if (ex) {
+                if (ex.getAttribute('data-done') === '1') resolve();
+                else ex.addEventListener('load', function () { resolve(); });
+                return;
+            }
+            let s = document.createElement('script');
+            s.src = src; s.setAttribute('data-kroy', src);
+            s.onload = function () { s.setAttribute('data-done', '1'); resolve(); };
+            s.onerror = function () { resolve(); };
+            document.head.appendChild(s);
+        });
+    }
+
+    loadCss('https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css');
+
+    // Ketma-ket yuklaymiz: Chart.js -> DataTables core -> DataTables bootstrap5
+    loadScript('https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js')
+        .then(function () { return loadScript('https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js'); })
+        .then(function () { return loadScript('https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js'); })
+        .then(function () {
+            initTable();
+            loadStats();
+        });
+
+})();
 </script>
